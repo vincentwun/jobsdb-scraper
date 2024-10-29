@@ -35,7 +35,7 @@ The results file will save to the current directory in a folder called `jobsdb_s
 If you want to specify the directory to save your results file to, you can do:
 
 ```shell script
-node build/src/scrape_jobsdb <firstNPages> <pathResultDir>
+node build/src/scrape_jobsdb <firstNPages> <saveDir>
 ```
 
 ## How it works
