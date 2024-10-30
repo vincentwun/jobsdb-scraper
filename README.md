@@ -13,11 +13,20 @@ A few cool highlights about this scraper:
 
 - **Node.js** version **18** or higher. If not installed, [go here](https://nodejs.org/en/download/) to download it.
 - **git** required. If not installed, [go here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to download it.
-
+1. clone the repo.
 ```shell script
 git clone https://github.com/krishgalani/jobsdb-scraper.git
+```
+2. cd into the repo
+```shell script
 cd jobsdb-scraper
+```
+3. install dependencies
+```shell script
 npm install 
+```
+4. compile typescript
+```shell script
 npm run build
 ```
 
