@@ -9,11 +9,12 @@ A few cool highlights about this scraper:
 
 ## Installation
 
-### Requirements
+### Requirements:
 
 - **Node.js** version **18** or higher. If not installed, [go here](https://nodejs.org/en/download/) to download it.
 - **git** required. If not installed, [go here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to download it.
-1. clone the repo.
+### Steps:
+1. clone the repo
 ```shell script
 git clone https://github.com/krishgalani/jobsdb-scraper.git
 ```
@@ -55,7 +56,7 @@ There are 1000 pages of publically accessible job information on JobsDB ranging 
 
 The server part of the program launches two @ulixee/cloud locally hosted server nodes as the engines behind page navigation and fetches, both hosting a browser with many browsing sessions.
 
-The client program launches @ulixee/hero instances (which are connected to a respective server node) and specifies the page to scrape. For each page, first the jobIds are parsed from the returned HTML, then for each jobId a fetch to the backend graphql API is initiated. The results are received in real time and written to a JSON file locally.
+The client program uses the ulixee framework (github.com/ulixee), where each worker (a @ulixee/hero instance connected to a respective @ulixee/cloud server node) has a browser environment and goes page by page on its page range chunk making GETS and POST fetches to the backend db. All workers have a shared page task queue. For each page, first the jobIds are parsed from the returned HTML, then for each jobId a fetch to the backend graphql API is initiated. The results are received in real time and written to a JSON file locally.
 
 ## License
 
