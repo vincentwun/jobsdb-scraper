@@ -1,14 +1,3 @@
-/*
- *  -------------------------------------------------
- *  |                                                |
- *  |           Created by Krish Galani              |
- *  |         Copyright © 2024 Krish Galani          |
- *  |               MIT License                      |
- *  |        GitHub: github.com/krishgalani          |
- *  |                                                |
- *  -------------------------------------------------
- */
-
 import { CloudNode } from '@ulixee/cloud';
 
 (async () => {

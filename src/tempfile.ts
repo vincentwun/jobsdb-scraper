@@ -1,20 +1,10 @@
-/*
- *  -------------------------------------------------
- *  |                                                |
- *  |           Created by Krish Galani              |
- *  |         Copyright © 2024 Krish Galani          |
- *  |               MIT License                      |
- *  |        GitHub: github.com/krishgalani          |
- *  |                                                |
- *  -------------------------------------------------
- */
-
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { Mutex } from 'async-mutex';
-import { arePathsOnDifferentDrives, reverseString } from './utils';
-import { dir } from 'tmp';
+import { arePathsOnDifferentDrives } from './file_io_utils';
+import { reverseString } from './utils';
+
+
 export class TempFile {
   private tempFilePath: string ;
   private mutex: Mutex;

@@ -1,17 +1,7 @@
-/*
- *  -------------------------------------------------
- *  |                                                |
- *  |           Created by Krish Galani              |
- *  |         Copyright © 2024 Krish Galani          |
- *  |               MIT License                      |
- *  |        GitHub: github.com/krishgalani          |
- *  |                                                |
- *  -------------------------------------------------
- */
-
 import { ICookie } from '@ulixee/unblocked-specification/agent/net/ICookie';
 import Hero from '@ulixee/hero';
-import { AsyncBlockingQueue, parseHtml} from './utils';
+import { get_page_url, parseHtml } from './scrape_utils';
+import { AsyncBlockingQueue} from './async_blocking_queue';
 import { v4 as uuidv4 } from 'uuid';
 import Semaphore from 'semaphore-async-await'
 
@@ -65,6 +55,7 @@ export class ScrapeOperation {
     cookie_jar : AsyncBlockingQueue<Cookie>
     pageQueue : AsyncBlockingQueue<number>
     cloudNodePort : number
+    region : string
     timeout : number
     pagesScraped : number
     pageRange : number[]
@@ -74,10 +65,11 @@ export class ScrapeOperation {
     timeoutPromise : any
     timeoutClear : any
     stopMiningCookies : boolean
-    constructor(baseUrl: string, pageRange: number[], cloudNodePort : number, outFile : any, logFile : any = null, timeout : number = 3600){
+    constructor(baseUrl: string, pageRange: number[], cloudNodePort : number, outFile : any, region : string, logFile : any = null, timeout : number = 3600){
         this.baseUrl = baseUrl
         this.pagesScraped = 0
         this.outFile = outFile
+        this.region = region
         this.logFile = logFile
         this.timeout = timeout
         this.num_pages = pageRange[1] - pageRange[0] + 1
@@ -112,9 +104,6 @@ export class ScrapeOperation {
         return Object.entries(cookie.cookie)
           .map(([key, value]) => `${key}=${value}`)
           .join('; ');
-    }
-    get_page_url(page: number): string {
-        return `${this.baseUrl}?page=${page}`;
     }
     get_dict(cookies : ICookie[]): { [key: string]: string } {
         const cookieDict : { [key: string]: string } = {}
@@ -236,9 +225,9 @@ export class ScrapeOperation {
         }
         try {
             while(!this.pageQueue.isEmpty()){
-                const jobIds : any = []
+                let jobIds : any = []
                 const pageNum = await this.pageQueue.dequeue()
-                await hero.goto(this.get_page_url(pageNum))
+                await hero.goto(get_page_url(pageNum,this.region))
                 await hero.waitForLoad('DomContentLoaded')
                 const article_elems = await hero.querySelectorAll('article[data-job-id]').$detach();
                 for (let elem of article_elems) {

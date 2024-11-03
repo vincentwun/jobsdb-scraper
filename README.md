@@ -3,7 +3,7 @@
 
 A few cool highlights about this scraper:
 
-- **Lightweight,and made to run on commodity computers** - Low memory/cpu utilization due to efficient use of modern web-scraping framework (https://github.com/ulixee/hero).
+- **Lightweight,and made to run on commodity computers** - Low memory/cpu utilization due to efficient use of modern web-scraping framework (https://github.com/ulixee).
 - **Avoids detection along the entire stack** - High guarantees on ability to safely scrape jobs and bypass Cloudflare.
 - **Customize how many pages you want to scrape** - You can specify how many pages of jobs you want to scrape up to a maximum of 1000. 
 
@@ -34,25 +34,32 @@ npm run build
 ## Usage
 ### Warning: This operation is **NOT** thread-safe.
 
+To find the maxPages available to scrape for a region (hk or th):
 ```shell script
-node build/src/scrape_jobsdb <firstNPages>
+node --no-warnings build/src/scrape_jobsdb maxPages <region>
 ```
-
-`1 <= firstNPages <= 1000`
-
-The results file will save to the current directory in a folder called `jobsdb_scrape_results` by default. 
-
-If you want to specify the directory to save your results file to, you can do:
-
+To run the scraper:
 ```shell script
-node build/src/scrape_jobsdb <firstNPages> <saveDir>
+node --no-warnings build/src/scrape_jobsdb [options]
+Options:
+  -r, --region <two_letters>  hk (Hong Kong) or th (Thailand) (required)
+  -n, --numPages <number>     Number of pages to scrape (default: "all")
+  -s, --saveDir <pathToDir>   Directory to store results file (optional) (default: "./jobsdb_scrape_results")
 ```
+## Examples
+Find maxPages available to scrape for Hong Kong
+```shell script
+node --no-warnings build/src/scrape_jobsdb maxPages hk
+```
+Scrape all pages in thailand
+```shell script
+node --no-warnings build/src/scrape_jobsdb -r th
+```
+The name format of the result file is jobsdb-\<region>-\<pages>-\<date>.json
 
 ## How it works
 
-There are 1000 pages of publically accessible job information on JobsDB ranging from
-
-[[hk.jobsdb.com/jobs?page=1](hk.jobsdb.com/jobs?page=1) - [hk.jobsdb.com/jobs?page=1000](hk.jobsdb.com/jobs?page=1)]
+There are 1000 pages of publically accessible job information on JobsDB HK and TH
 
 The server part of the program launches two @ulixee/cloud locally hosted server nodes as the engines behind page navigation and fetches, both hosting a browser with many browsing sessions.
 
