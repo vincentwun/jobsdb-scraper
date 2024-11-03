@@ -80,7 +80,7 @@ async function main(options : any){
         pagesScraped += scrapeOp.pagesScraped
       }
       printProgressBar(pagesScraped,numPages)
-      await sleep(10000)
+      await sleep(1000)
     }
   } catch (error : any) {
     encountered_error = true

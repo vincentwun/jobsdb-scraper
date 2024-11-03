@@ -38,7 +38,7 @@ To find the maxPages available to scrape for a region (hk or th):
 ```shell script
 node --no-warnings build/src/scrape_jobsdb maxPages <region>
 ```
-To run the scraper:
+To run the scraper (can take up to ~10m):
 ```shell script
 node --no-warnings build/src/scrape_jobsdb [options]
 Options:
