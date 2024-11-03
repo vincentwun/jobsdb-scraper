@@ -5,7 +5,7 @@ A few cool highlights about this scraper:
 
 - **Lightweight,and made to run on commodity computers** - Low memory/cpu utilization due to efficient use of modern web-scraping framework (https://github.com/ulixee).
 - **Avoids detection along the entire stack** - High guarantees on ability to safely scrape jobs and bypass Cloudflare.
-- **Customize how many pages you want to scrape** - You can specify how many pages of jobs you want to scrape up to a maximum of 1000. 
+- **Customize how many pages you want to scrape** - You can specify how many pages of jobs you want to scrape up to a maximum of all.
 
 ## Installation
 
@@ -55,11 +55,9 @@ Scrape all pages in thailand
 ```shell script
 node --no-warnings build/src/scrape_jobsdb -r th
 ```
-The name format of the result file is jobsdb-\<region>-\<pages>-\<date>.json
+The name format of the result file is jobsdb-\<region>-\<pages>-\<date>.json and saved in a folder called jobsdb_scrape_results by default.
 
 ## How it works
-
-There are 1000 pages of publically accessible job information on JobsDB HK and TH
 
 The server part of the program launches two @ulixee/cloud locally hosted server nodes as the engines behind page navigation and fetches, both hosting a browser with many browsing sessions.
 
