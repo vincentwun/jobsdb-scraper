@@ -11,7 +11,8 @@ function findFileWithPattern(directory: string, pattern: RegExp): string | null 
 
 describe('scrape_jobsdb.ts test', () => {
   const directoryPath = __dirname;
-  const filePattern = /^jobsdb.*\.json$/; // Pattern to match jobsdb*.json
+  const filePatternHK = /^jobsdb-hk.*\.json$/; // Pattern to match jobsdb*.json
+  const filePatternTH = /^jobsdb-th.*\.json$/; // Pattern to match jobsdb*.json
 
   // Helper function to run the Node.js script synchronously
   function runScriptSync(scriptPath: string, args: string[]): void {
@@ -26,71 +27,45 @@ describe('scrape_jobsdb.ts test', () => {
   }
 
   // Increase timeout for long-running test
-  test('should successfully execute the script and check for result file', () => {
+  test('should successfully execute the script for region=hk and check for result file', () => {
     const scriptPath = 'src/scrape_jobsdb.ts';
 
-    // Find and delete existing matching file if it exists
-    const existingFile = findFileWithPattern(directoryPath, filePattern);
-    if (existingFile) {
-      fs.unlinkSync(existingFile);
-    }
-
     // Run the script synchronously with argument "10"
-    runScriptSync(scriptPath, ['1', 'tests']);
+    runScriptSync(scriptPath, ['-n 1', '-s tests','-r hk']);
 
     // Check if the result file exists by finding a matching file
-    const resultFile = findFileWithPattern(directoryPath, filePattern);
+    const resultFile = findFileWithPattern(directoryPath, filePatternHK);
     expect(resultFile).not.toBeNull(); // Expect that a matching file was found
   });
+  test('should successfully execute the script for region=th and check for result file', () => {
+    const scriptPath = 'src/scrape_jobsdb.ts';
 
+    // Run the script synchronously with argument "10"
+    runScriptSync(scriptPath, ['-n 1', '-s tests','-r th']);
+
+    // Check if the result file exists by finding a matching file
+    const resultFile = findFileWithPattern(directoryPath, filePatternTH);
+    expect(resultFile).not.toBeNull(); // Expect that a matching file was found
+  });
+  beforeAll(() => {
+    const existingFileHK = findFileWithPattern(directoryPath, filePatternHK);
+      if (existingFileHK) {
+        fs.unlinkSync(existingFileHK);
+      }
+    const existingFileTH = findFileWithPattern(directoryPath, filePatternTH);
+    if (existingFileTH) {
+      fs.unlinkSync(existingFileTH);
+    }
+  })
   // Remove the file after all tests have completed
   afterAll(() => {
-    const resultFile = findFileWithPattern(directoryPath, filePattern);
-    if (resultFile && fs.existsSync(resultFile)) {
-      fs.unlinkSync(resultFile);
+    const resultFileHK = findFileWithPattern(directoryPath, filePatternHK);
+    if (resultFileHK && fs.existsSync(resultFileHK)) {
+      fs.unlinkSync(resultFileHK);
+    }
+    const resultFileTH = findFileWithPattern(directoryPath, filePatternTH);
+    if (resultFileTH && fs.existsSync(resultFileTH)) {
+      fs.unlinkSync(resultFileTH);
     }
   });
 });
-// import { execSync } from 'child_process';
-// import * as fs from 'fs';
-// import * as path from 'path';
-
-// function findFileWithPattern(directory: string, pattern: RegExp): string  {
-//   const files = fs.readdirSync(directory);
-//   const matchedFile = files.find(file => pattern.test(file));
-//   return matchedFile ? path.join(directory, matchedFile) : "";
-// }
-
-// describe('scrape_jobsdb.js test', () => {
-//   const filePattern = /^jobsdb.*\.json$/; // Pattern to match jobsdb*.json
-//   const expectedFilePath = findFileWithPattern('tests', filePattern);
-//   if (fs.existsSync(expectedFilePath)) {
-//     fs.unlink(expectedFilePath);
-//   }
-//   // Helper function to run the Node.js script synchronously
-//   function runScriptSync(scriptPath: string, args: string[]): void {
-//     const command = `ts-node ${scriptPath} ${args.join(' ')}`;
-//     try {
-//       // Run the command synchronously
-//       const output = execSync(command); // Inherit stdio to show output in the console
-//     } catch (error) {
-//       console.error('Script error:', error);
-//       throw error; // Ensure the test fails if there's an error
-//     }
-//   }
-
-//   // Increase timeout for long-running test
-//   test('should successfully execute the script and check for result file', () => {
-//     const scriptPath = 'src/scrape_jobsdb';
-
-//     if (fs.existsSync(expectedFilePath)) {
-//         fs.unlinkSync(expectedFilePath);  // Remove the existing file
-//     }
-//     // Run the script synchronously with argument "10"
-//     runScriptSync(scriptPath, ['1','tests']);
-
-//     // Check if the result file exists
-//     const fileExists = fs.existsSync(expectedFilePath);
-//     expect(fileExists).toBe(true);
-//   }); 
-// });
