@@ -39,6 +39,7 @@ async function positionFromLastPage(heroes : Hero[] , page : number, region : st
 }
 //Perform a binary search
 export async function findLastPage(region : string, heroes? : Hero[]){
+    if(region == 'hk') return 1000
     let heroCore;
     let selfInit = false
     if(heroes === undefined){

@@ -44,7 +44,7 @@ node --no-warnings build/src/scrape_jobsdb [options]
 Options:
   -r, --region <two_letters>  hk (Hong Kong) or th (Thailand) (required)
   -n, --numPages <number>     Number of pages to scrape (default: "all")
-  -s, --saveDir <pathToDir>   Directory to store results file (optional) (default: "./jobsdb_scrape_results")
+  -s, --saveDir <pathToDir>   Directory to store results file  (default: "./jobsdb_scrape_results")
 ```
 ## Examples
 Find maxPages available to scrape for Hong Kong
