@@ -24,7 +24,6 @@ describe('Find last page', () => {
             }),
             new Hero({
                 sessionPersistence: false,
-                blockedResourceTypes: ['All'],
                 connectionToCore: connectionToCore2,
             }),
         ];
@@ -39,18 +38,20 @@ describe('Find last page', () => {
     });
 
     // Define tests
-    it('should return proper boolean if there is results or not', async () => {
-        expect(await isZeroResults(heroes[0],1,'hk')).toBe(false)
-        expect(await isZeroResults(heroes[0],10000,'hk')).toBe(true)
-        expect(await isZeroResults(heroes[0],1,'th')).toBe(false)
-        expect(await isZeroResults(heroes[0],10000,'th')).toBe(true)
+    it('isZeroResults', async () => {
+        expect(await isZeroResults(heroes[1],1,'hk')).toBe(false)
+        expect(await isZeroResults(heroes[1],10000,'hk')).toBe(true)
+        expect(await isZeroResults(heroes[1],1,'th')).toBe(false)
+        expect(await isZeroResults(heroes[1],10000,'th')).toBe(true)
     })
     it('Returns a page value for hk > 1', async () => {
         const lastPage = await findLastPage('hk')
         expect(lastPage).toBeGreaterThan(1);
+        console.log(lastPage)
     });
     it('Returns a page value for th > 1', async () => {
         const lastPage = await findLastPage('th')
         expect(lastPage).toBeGreaterThan(1);
+        console.log(lastPage)
     });
 });

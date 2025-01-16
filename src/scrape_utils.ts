@@ -11,9 +11,31 @@ export function get_base_url(region : string): string {
     return `https://${region}.jobsdb.com/jobs`;
 }
 export async function isZeroResults(hero: Hero, page: number, region: string){
-    await hero.goto(get_page_url(page,region))
-    await hero.waitForLoad("DomContentLoaded")
-    return await hero.querySelector('section[data-automation="searchZeroResults"]').$exists
+    const {activeTab, document} = hero
+    await activeTab.goto(get_page_url(page,region))
+    const elem = document.querySelector('script[data-automation="server-state"]')
+    const scriptElement = await activeTab.waitForElement(elem,{timeoutMs: 20000})
+
+    if(scriptElement === null){
+        throw new Error("Cannot parse script tag when finding isZeroResults")
+    }
+    const scriptText = await scriptElement.textContent
+    if(scriptText === null){
+        throw new Error("Cannot parse script tag when finding isZeroResults")
+    }
+    const match = scriptText.match(/window\.SEEK_REDUX_DATA\s*=\s*(\{.*?\});/s);
+    if (!match) {
+        throw new Error('Could not find window.SEEK_REDUX_DATA in the script content.');
+    }
+    const reduxJsonString = match[1];
+    let reduxData;
+    try {
+      reduxData = JSON.parse(reduxJsonString);
+    } catch (err : any) {
+      throw new Error(`Failed to parse Redux data: ${err.message}`);
+    }
+    const isZeroResults = reduxData?.results?.results.jobs === null
+    return isZeroResults
 }
 async function positionFromLastPage(heroes : Hero[] , page : number, region : string) {
     let tasks = []
@@ -39,7 +61,7 @@ async function positionFromLastPage(heroes : Hero[] , page : number, region : st
 }
 //Perform a binary search
 export async function findLastPage(region : string, heroes? : Hero[]){
-    if(region == 'hk') return 1000
+    console.log("Finding the number of pages available to scrape...")
     let heroCore;
     let selfInit = false
     if(heroes === undefined){
@@ -54,12 +76,10 @@ export async function findLastPage(region : string, heroes? : Hero[]){
         heroes = [
             new Hero({
                 sessionPersistence: false,
-                blockedResourceTypes: ['All'],
                 connectionToCore: connectionToCore1,
             }),
             new Hero({
                 sessionPersistence: false,
-                blockedResourceTypes: ['All'],
                 connectionToCore: connectionToCore2,
             }),
         ];

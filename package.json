@@ -31,7 +31,7 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "build": "tsc",
     "clear": "rimraf build jobsdb_scrape_logs jobsdb_scrape_results"
   }
