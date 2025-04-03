@@ -66,7 +66,7 @@ async function main(options : any){
       tasks.push(scrapeOperations[i].__call__())
     }
     let scrapeOperationsDone = false
-    console.log(`Scraping the first ${numPages} pages of jobs.`)
+    console.log(`Scraping the first ${numPages} pages of jobs on ${get_base_url(region)}.`)
     Promise.all(tasks)
     .catch(err => {
       throw err;

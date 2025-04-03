@@ -61,49 +61,8 @@ async function positionFromLastPage(heroes : Hero[] , page : number, region : st
 }
 //Perform a binary search
 export async function findLastPage(region : string, heroes? : Hero[]){
-    console.log("Finding the number of pages available to scrape...")
-    let heroCore;
-    let selfInit = false
-    if(heroes === undefined){
-        selfInit = true
-        const bridge1 = new TransportBridge();
-        const bridge2 = new TransportBridge();
-        const connectionToCore1 = new ConnectionToHeroCore(bridge1.transportToCore);
-        const connectionToCore2 = new ConnectionToHeroCore(bridge2.transportToCore);
-        heroCore = new HeroCore();
-        heroCore.addConnection(bridge1.transportToClient);
-        heroCore.addConnection(bridge2.transportToClient);
-        heroes = [
-            new Hero({
-                sessionPersistence: false,
-                connectionToCore: connectionToCore1,
-            }),
-            new Hero({
-                sessionPersistence: false,
-                connectionToCore: connectionToCore2,
-            }),
-        ];
+    if(region == 'hk'){
+        return 1000
     }
-    let start = 1
-    let end = 1000
-    let ret = -1
-    while(start <= end){
-        let mid = Math.trunc((start + end) / 2)
-        let pos = await positionFromLastPage(heroes,mid,region)
-        if(pos === 'before'){
-            start = mid + 1
-        } else if(pos === 'on'){
-            ret=mid
-            break
-        } else {
-            end = mid - 1
-        }
-    }
-    if(selfInit){
-        for(let hero of heroes){
-            await hero.close()
-        }
-        await heroCore?.close()
-    }
-    return ret // Couldn't find last page
+    return 500
 }
