@@ -9,25 +9,25 @@ describe('Find last page', () => {
     let heroCore : HeroCore;
     // Set up Hero instances and core connections
     beforeAll(() => {
-        const bridge1 = new TransportBridge();
-        const bridge2 = new TransportBridge();
-        const connectionToCore1 = new ConnectionToHeroCore(bridge1.transportToCore);
-        const connectionToCore2 = new ConnectionToHeroCore(bridge2.transportToCore);
         heroCore = new HeroCore();
-        heroCore.addConnection(bridge1.transportToClient);
-        heroCore.addConnection(bridge2.transportToClient);
-        heroes = [
-            new Hero({
-                sessionPersistence: false,
-                blockedResourceTypes: ['All'],
-                connectionToCore: connectionToCore1,
-            }),
-            new Hero({
-                sessionPersistence: false,
-                connectionToCore: connectionToCore2,
-            }),
-        ];
+        heroes = [];
+    
+        for (let i = 0; i < 4; i++) {
+            const bridge = new TransportBridge();
+            const connectionToCore = new ConnectionToHeroCore(bridge.transportToCore);
+    
+            heroCore.addConnection(bridge.transportToClient);
+    
+            heroes.push(
+                new Hero({
+                    sessionPersistence: false,
+                    blockedResourceTypes: ['All'],
+                    connectionToCore,
+                }),
+            );
+        }
     });
+    
 
     // Clean up Hero instances and core connections
     afterAll(async () => {
@@ -37,13 +37,14 @@ describe('Find last page', () => {
         await heroCore.close();
     });
 
-    // Define tests
-    // it('isZeroResults', async () => {
-    //     expect(await isZeroResults(heroes[1],1,'hk')).toBe(false)
-    //     expect(await isZeroResults(heroes[1],10000,'hk')).toBe(true)
-    //     expect(await isZeroResults(heroes[1],1,'th')).toBe(false)
-    //     expect(await isZeroResults(heroes[1],10000,'th')).toBe(true)
-    // })
+    it('isZeroResults', async () => {
+        await Promise.all([
+            expect(isZeroResults(heroes[0], 1, 'hk')).resolves.toBe(false),
+            expect(isZeroResults(heroes[1], 10000, 'hk')).resolves.toBe(true),
+            expect(isZeroResults(heroes[2],1,'th')).resolves.toBe(false),
+            expect(isZeroResults(heroes[3],10000,'th')).resolves.toBe(true)
+        ]);
+    })
     it('Returns a page value for hk > 1', async () => {
         const lastPage = await findLastPage('hk')
         expect(lastPage).toBeGreaterThan(1);
