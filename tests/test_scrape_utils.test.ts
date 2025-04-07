@@ -3,6 +3,7 @@ import HeroCore from '@ulixee/hero-core';
 import { TransportBridge } from '@ulixee/net';
 import { ConnectionToHeroCore } from '@ulixee/hero';
 import Hero from '@ulixee/hero';
+import NoSandboxPlugin from '../src/NoSandboxPlugin'
 
 describe('Find last page', () => {
     let heroes : Hero[];
@@ -10,6 +11,7 @@ describe('Find last page', () => {
     // Set up Hero instances and core connections
     beforeAll(() => {
         heroCore = new HeroCore();
+        heroCore.use(NoSandboxPlugin)
         heroes = [];
     
         for (let i = 0; i < 4; i++) {
