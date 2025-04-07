@@ -34,8 +34,14 @@ jobs:
       - name: Fix Ulixee sandbox permissions (Linux only)
         if: runner.os == 'Linux'
         run: |
-          sudo chown root /home/runner/.cache/ulixee/chrome/128.0.6613.137/chrome-sandbox
-          sudo chmod 4755 /home/runner/.cache/ulixee/chrome/128.0.6613.137/chrome-sandbox
+          SANDBOX_PATH=$(find /home/runner/.cache/ulixee/chrome/ -type f -name chrome-sandbox | head -n 1)
+          if [ -f "$SANDBOX_PATH" ]; then
+            sudo chown root "$SANDBOX_PATH"
+            sudo chmod 4755 "$SANDBOX_PATH"
+          else
+            echo "chrome-sandbox not found"
+            exit 1
+          fi
 
       - name: Run tests
         run: npm run test -- --detectOpenHandles
