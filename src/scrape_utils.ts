@@ -10,33 +10,15 @@ export function get_page_url(page: number, region : string): string {
 export function get_base_url(region : string): string {
     return `https://${region}.jobsdb.com/jobs`;
 }
-export async function isZeroResults(hero: Hero, page: number, region: string){
-    const {activeTab, document} = hero
-    await activeTab.goto(get_page_url(page,region))
-    const elem = document.querySelector('script[data-automation="server-state"]')
-    const scriptElement = await activeTab.waitForElement(elem,{timeoutMs: 20000})
-
-    if(scriptElement === null){
-        throw new Error("Cannot parse script tag when finding isZeroResults")
-    }
-    const scriptText = await scriptElement.textContent
-    if(scriptText === null){
-        throw new Error("Cannot parse script tag when finding isZeroResults")
-    }
-    const match = scriptText.match(/window\.SEEK_REDUX_DATA\s*=\s*(\{.*?\});/s);
-    if (!match) {
-        throw new Error('Could not find window.SEEK_REDUX_DATA in the script content.');
-    }
-    const reduxJsonString = match[1];
-    let reduxData;
-    try {
-      reduxData = JSON.parse(reduxJsonString);
-    } catch (err : any) {
-      throw new Error(`Failed to parse Redux data: ${err.message}`);
-    }
-    const isZeroResults = reduxData?.results?.results.jobs === null
-    return isZeroResults
+export async function isZeroResults(hero: Hero, page: number, region: string) {
+    const { activeTab, document } = hero;
+    await activeTab.goto(get_page_url(page, region));
+    await activeTab.waitForLoad('DomContentLoaded');
+    const elem = document.getElementById('searchResultSummary')
+    const hasResults = await elem.$exists;
+    return hasResults === false
 }
+//Binary search the last page
 async function positionFromLastPage(heroes : Hero[] , page : number, region : string) {
     let tasks = []
     for(let i = 0; i < 2;i++){
@@ -60,9 +42,53 @@ async function positionFromLastPage(heroes : Hero[] , page : number, region : st
     return 'before'
 }
 //Perform a binary search
+//Perform a binary search
 export async function findLastPage(region : string, heroes? : Hero[]){
-    if(region == 'hk'){
-        return 1000
+    console.log(`Finding the pages available to scrape for ${get_base_url(region)}...`)
+    let heroCore;
+    let selfInit = false
+    if(heroes === undefined){
+        selfInit = true
+        const bridge1 = new TransportBridge();
+        const bridge2 = new TransportBridge();
+        const connectionToCore1 = new ConnectionToHeroCore(bridge1.transportToCore);
+        const connectionToCore2 = new ConnectionToHeroCore(bridge2.transportToCore);
+        heroCore = new HeroCore();
+        heroCore.addConnection(bridge1.transportToClient);
+        heroCore.addConnection(bridge2.transportToClient);
+        heroes = [
+            new Hero({
+                sessionPersistence: false,
+                blockedResourceTypes: ['All'],
+                connectionToCore: connectionToCore1,
+            }),
+            new Hero({
+                sessionPersistence: false,
+                blockedResourceTypes: ['All'],
+                connectionToCore: connectionToCore2,
+            }),
+        ];
     }
-    return 500
+    let start = 1
+    let end = 1000
+    let ret = -1
+    while(start <= end){
+        let mid = Math.trunc((start + end) / 2)
+        let pos = await positionFromLastPage(heroes,mid,region)
+        if(pos === 'before'){
+            start = mid + 1
+        } else if(pos === 'on'){
+            ret=mid
+            break
+        } else {
+            end = mid - 1
+        }
+    }
+    if(selfInit){
+        for(let hero of heroes){
+            await hero.close()
+        }
+        await heroCore?.close()
+    }
+    return ret // Couldn't find last page
 }

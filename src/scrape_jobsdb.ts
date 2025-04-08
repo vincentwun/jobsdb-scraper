@@ -11,10 +11,12 @@ import { sleep } from './utils';
 import {InvalidArgumentError, program} from 'commander';
 import Hero from '@ulixee/hero'
 import { findLastPage, get_base_url } from './scrape_utils';
+import { ChildProcessWithoutNullStreams } from 'child_process';
+
+setGracefulCleanup()
 
 //Globals
-setGracefulCleanup()
-const cloudNodeProcesses: any[] = [];
+const cloudNodeProcesses: ChildProcessWithoutNullStreams[] = [];
 let numCloudNodes : number = 0; 
 let pageRanges = [[0,0],[0,0]];
 const enableLogging = false
@@ -24,11 +26,17 @@ const outFiles = Array.from({ length: 2 }, () => new TempFile(fileSync({ dir: tm
 let logFiles: any = Array(2).fill(null)
 if(enableLogging){
   logFiles = Array.from({ length: 2 }, () => new TempFile(fileSync({ dir: tmpDir.name, keep : true })));
+} else {
+  //ignore deprecation warning 
+  process.removeAllListeners('warning');
 }
 let scrapeOperations : ScrapeOperation[] = [];
 let tasks : any = [];
 let ports : number[] = [];
 const start_time = Date.now()/1000;
+
+
+
 
 async function main(options : any){
   let encountered_error = false;
@@ -50,7 +58,7 @@ async function main(options : any){
     }
     //Start cloudnodes
     for (let i = 0; i < numCloudNodes; i++) {
-      const serverProcess = startServerProcess(i.toString());
+      const serverProcess = startServerProcess(i.toString(), enableLogging);
       cloudNodeProcesses.push(serverProcess);
     }
     //Receive portnums
@@ -100,8 +108,10 @@ async function main(options : any){
           console.log(`\nLogfile ${i+1} saved to ${logFileSavePath}`)
         }
         await appendFileContent(outFiles[i].getFilePath(),mergedOutFile.getFilePath())
-        if(cloudNodeProcesses.length){
-          cloudNodeProcesses[i].kill('SIGKILL')
+        if(cloudNodeProcesses.length>0){
+          if(cloudNodeProcesses[i].kill() === false){
+            console.log('Error during CloudNode shutdown');
+          }
         }
       }
       await mergedOutFile.popLine()
@@ -140,6 +150,7 @@ program
       throw error
     }
   });
+//program start
 (async () => {
   await program.parseAsync(process.argv);
 })();
