@@ -1,6 +1,6 @@
 import { InvalidArgumentError } from 'commander';
 import * as fs from 'fs';
-import { findLastPage } from './scrape_utils';
+import { findLastPage, get_base_url } from './scrape_utils';
 import Hero from '@ulixee/hero'
 export function parseRegion(region : string){
   const regions = new Set(['hk','th'])
@@ -30,10 +30,13 @@ export function parseFormat(fmt : string){
   return fmt
 }
 export async function parseNumPages(numPages : string, region : string, heroes? : Hero[]) {
-  // parseInt takes a string and a radix
+  console.log(`Finding pages available to scrape on ${get_base_url(region)}...`)
   const maxPages = await findLastPage(region)
+  if(maxPages == -1){
+    throw new Error("\nCouldn't find the pages available to scrape, please file an issue on github")
+  }
   if(numPages == "all"){
-    return maxPages
+    return [maxPages,maxPages]
   }
   const parsedValue = parseInt(numPages);
   if (isNaN(parsedValue)) {
@@ -44,6 +47,6 @@ export async function parseNumPages(numPages : string, region : string, heroes? 
     if(maxPages < parsedValue){
       throw new InvalidArgumentError(`numPages <= ${maxPages}`)
     }
-    return parsedValue;
+    return [parsedValue,maxPages];
   }
 }

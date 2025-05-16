@@ -44,7 +44,6 @@ async function positionFromLastPage(heroes : Hero[] , page : number, region : st
 //Perform a binary search
 //Perform a binary search
 export async function findLastPage(region : string, heroes? : Hero[]){
-    console.log(`Finding the pages available to scrape for ${get_base_url(region)}...`)
     let heroCore;
     let selfInit = false
     if(heroes === undefined){
@@ -90,5 +89,10 @@ export async function findLastPage(region : string, heroes? : Hero[]){
         }
         await heroCore?.close()
     }
-    return ret // Couldn't find last page
+    if(ret === -1 || ret < 1){
+        ret = -1
+        // Couldn't find last page
+        // console.log(`Couldn't find pages available to scrape in ${get_base_url(region)}`)
+    }
+    return ret 
 }

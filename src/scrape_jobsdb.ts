@@ -44,6 +44,7 @@ async function main(options : any){
   const region = options.region
   const baseUrl = get_base_url(region)
   const numPages = options.numPages
+  const maxPages = options.maxPages
   try { 
     if (numPages > 10){
       numCloudNodes = 2
@@ -74,7 +75,7 @@ async function main(options : any){
       tasks.push(scrapeOperations[i].__call__())
     }
     let scrapeOperationsDone = false
-    console.log(`Scraping the first ${numPages} pages of jobs on ${get_base_url(region)}.`)
+    console.log(`Scraping ${numPages}/${maxPages} pages of jobs on ${get_base_url(region)}.`)
     Promise.all(tasks)
     .catch(err => {
       throw err;
@@ -144,7 +145,9 @@ program
   .option('-s, --saveDir <pathToDir>', 'Directory to store results file (optional)', parseSaveDir, './jobsdb_scrape_results')
   .action(async (cmdObj) => {
     try {
-      cmdObj.numPages = await parseNumPages(cmdObj.numPages, cmdObj.region);
+      const [numPages, maxPages] = await parseNumPages(cmdObj.numPages, cmdObj.region);
+      cmdObj.numPages = numPages
+      cmdObj.maxPages = maxPages
       await main(cmdObj)
     } catch (error) {
       throw error
