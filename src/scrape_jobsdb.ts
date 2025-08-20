@@ -1,7 +1,10 @@
 import {ScrapeOperation, PageArgs, JobArgs} from './scrape_operation';
+import {spawn} from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
-import {waitForPort, startServerProcess} from './server';
+import {createLogger} from './logger';
+import type {Logger} from 'pino';
+import {waitForPort} from './server';
 import { clean_dir,appendFileContent } from './file_io_utils';
 import {parseNumPages, parseRegion, parseFormat, parseSaveDir} from './parseArguments';
 import {setGracefulCleanup,fileSync, dirSync, dir} from 'tmp';
@@ -9,24 +12,22 @@ import { TempFile } from './tempfile';
 import { printProgressBar } from './utils';
 import { sleep } from './utils';
 import {InvalidArgumentError, program} from 'commander';
-import Hero from '@ulixee/hero'
 import { findLastPage, get_base_url } from './scrape_utils';
 import { ChildProcessWithoutNullStreams } from 'child_process';
 
 setGracefulCleanup()
 
 //Globals
+const enableLogging = process.env.LOG_ENABLED === "true"
+let logger = createLogger('client',enableLogging)
+
 const cloudNodeProcesses: ChildProcessWithoutNullStreams[] = [];
 let numCloudNodes : number = 0; 
 let pageRanges = [[0,0],[0,0]];
-const enableLogging = false
 const tmpDir = dirSync({unsafeCleanup: !enableLogging})
 const mergedOutFile = new TempFile(fileSync({dir : tmpDir.name}))
 const outFiles = Array.from({ length: 2 }, () => new TempFile(fileSync({ dir: tmpDir.name })));
-let logFiles: any = Array(2).fill(null)
 if(enableLogging){
-  logFiles = Array.from({ length: 2 }, () => new TempFile(fileSync({ dir: tmpDir.name, keep : true })));
-} else {
   //ignore deprecation warning 
   process.removeAllListeners('warning');
 }
@@ -34,9 +35,6 @@ let scrapeOperations : ScrapeOperation[] = [];
 let tasks : any = [];
 let ports : number[] = [];
 const start_time = Date.now()/1000;
-
-
-
 
 async function main(options : any){
   let encountered_error = false;
@@ -53,29 +51,26 @@ async function main(options : any){
       numCloudNodes = 1
       pageRanges[0] = [1,numPages]
     }
-    // Remove old logs (if they exist)
-    if(enableLogging){
-      clean_dir('../jobsdb_scrape_logs')
-    }
     //Start cloudnodes
     for (let i = 0; i < numCloudNodes; i++) {
-      const serverProcess = startServerProcess(i.toString(), enableLogging);
+      const serverProcess = spawn('node', ['build/src/cloudnode']);
+      logger.info(`Starting cloudnode ${i+1}...`);
       cloudNodeProcesses.push(serverProcess);
     }
     //Receive portnums
     for (let i = 0; i < numCloudNodes; i++) {
       ports.push(await waitForPort(cloudNodeProcesses[i]))
+      logger.info(`Cloudnode ${i+1} started on port ${ports[i]}`);
     }
     //Start scraping
     for (let i = 0; i < numCloudNodes; i++) {
-      if(enableLogging){
-        console.log(`Logfile ${i+1} created at ${logFiles[i].getFilePath()}`)
-      }
-      scrapeOperations.push(new ScrapeOperation(baseUrl,pageRanges[i],ports[i],outFiles[i],region,logFiles[i]))
+      scrapeOperations.push(new ScrapeOperation(baseUrl,pageRanges[i],ports[i],outFiles[i],region,logger.child({module: `scrapeOp${i+1}`})))
       tasks.push(scrapeOperations[i].__call__())
+      logger.info(`Scrape operation ${i+1} initialized for pages ${pageRanges[i][0]}-${pageRanges[i][1]}`);
     }
     let scrapeOperationsDone = false
-    console.log(`Scraping ${numPages}/${maxPages} pages of jobs on ${get_base_url(region)}.`)
+    console.log(`Scraping ${numPages}/${maxPages} available pages of jobs on ${get_base_url(region)}.`)
+    logger.info(`Scraping ${numPages}/${maxPages} available pages of jobs on ${get_base_url(region)}.`);
     Promise.all(tasks)
     .catch(err => {
       throw err;
@@ -91,27 +86,26 @@ async function main(options : any){
       printProgressBar(pagesScraped,numPages)
       await sleep(1000)
     }
+    
   } catch (error : any) {
     encountered_error = true
     if(error.code === 'EACCES'){
       console.error("The specified result directory does not have write permissions.")
+      logger.error("The specified result directory does not have write permissions.");
     } else {
-      console.error('scrape.ts:', error);
+      console.error('scrape_jobsdb.ts in main:', error);
+      logger.error(`Error during scraping: ${error.message}`);
     }
     
   } finally {
       //Cleanup results
       await mergedOutFile.writeToFile('[\n')
       for (let i = 0; i < numCloudNodes; i++) {
-        if(enableLogging){
-          const logFileSavePath = `jobsdb_scrape_logs/p${pageRanges[i][0]}-${pageRanges[i][1]}.log`
-          await logFiles[i].renameTempFile(logFileSavePath)
-          console.log(`\nLogfile ${i+1} saved to ${logFileSavePath}`)
-        }
         await appendFileContent(outFiles[i].getFilePath(),mergedOutFile.getFilePath())
         if(cloudNodeProcesses.length>0){
           if(cloudNodeProcesses[i].kill() === false){
             console.log('Error during CloudNode shutdown');
+            logger.error(`Error during CloudNode ${i} shutdown`);
           }
         }
       }
@@ -125,6 +119,8 @@ async function main(options : any){
         await mergedOutFile.renameTempFile(resultPath)
         console.log(`\nResult file saved to ${resultPath} in json format.`)
         console.log(`Scrape finished in ${Math.floor(Date.now()/1000 - start_time)} seconds`)
+        logger.info(`Result file saved to ${resultPath} in json format.`);
+        logger.info(`Scrape finished in ${Math.floor(Date.now()/1000 - start_time)} seconds`);
       }
   }
 }

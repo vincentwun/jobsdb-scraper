@@ -22,13 +22,21 @@ export function sleep(ms: number) {
 }
 
 export function reverseString(str: string): string {
-  const retArray = [];
-  for (let i = str.length - 1; i >= 0; i--) {
-    retArray.push(str[i]);
-  }
-  return retArray.join('');
+  return str.split("").reverse().join("");
 }
 export function getObjectSize(obj: { [key: string]: any }): number {
   return Object.keys(obj).length;
 }
 
+export function createTimeoutPromise(timeout: number, timeoutVal: any) {
+  let timeoutId: NodeJS.Timeout;
+
+  const promise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(timeoutVal), timeout*1000);
+  });
+
+  return {
+    promise,
+    clear: () => clearTimeout(timeoutId)
+  };
+}
