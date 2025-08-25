@@ -5,33 +5,15 @@ import pino, { Logger } from "pino";
 const logDir = "./jobsdb_scrape_logs";
 
 export function createLogger(name: string, enableLogging: boolean): Logger {
-  let destination: pino.DestinationStream | undefined;
+  if (!enableLogging) return pino({ level: "silent" });
 
-  if (enableLogging) {
-    fs.mkdirSync(logDir, { recursive: true }); // ensure directory exists
+  fs.mkdirSync(logDir, { recursive: true });
 
-    const now = new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-"); // safe for filenames
+  const now = new Date().toISOString().replace(/[:.]/g, "-");
+  const destinationPath = `${logDir}/${name}-${now}.log`;
 
-    const destinationPath = `${logDir}/${name}-${now}.log`;
+  // let pino write directly to the file destination (no stdout)
+  const dest = pino.destination({ dest: destinationPath, sync: false });
 
-    destination = fs.createWriteStream(destinationPath, {
-      flags: "w",
-    });
-  }
-
-  return pino(
-    {
-      name,
-      level: enableLogging ? "info" : "silent",
-      transport: enableLogging
-        ? {
-            target: "pino-pretty",
-            options: { colorize: true },
-          }
-        : undefined,
-    },
-    destination // will be undefined if logging disabled
-  );
+  return pino({ level: "info", name }, dest);
 }

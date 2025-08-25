@@ -18,19 +18,19 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 setGracefulCleanup()
 
 //Globals
-const enableLogging = process.env.LOG_ENABLED === "true"
+const enableLogging = process.env.LOG_ENABLED === "true";
 let logger = createLogger('client',enableLogging)
-
+if(!enableLogging){
+  //ignore deprecation warning 
+  process.removeAllListeners('warning');
+}
 const cloudNodeProcesses: ChildProcessWithoutNullStreams[] = [];
 let numCloudNodes : number = 0; 
 let pageRanges = [[0,0],[0,0]];
 const tmpDir = dirSync({unsafeCleanup: !enableLogging})
 const mergedOutFile = new TempFile(fileSync({dir : tmpDir.name}))
 const outFiles = Array.from({ length: 2 }, () => new TempFile(fileSync({ dir: tmpDir.name })));
-if(enableLogging){
-  //ignore deprecation warning 
-  process.removeAllListeners('warning');
-}
+
 let scrapeOperations : ScrapeOperation[] = [];
 let tasks : any = [];
 let ports : number[] = [];
@@ -53,7 +53,7 @@ async function main(options : any){
     }
     //Start cloudnodes
     for (let i = 0; i < numCloudNodes; i++) {
-      const serverProcess = spawn('node', ['build/src/cloudnode']);
+      const serverProcess = spawn('node', ['build/src/cloudnode',String(i),String(enableLogging)]);
       logger.info(`Starting cloudnode ${i+1}...`);
       cloudNodeProcesses.push(serverProcess);
     }
@@ -77,6 +77,7 @@ async function main(options : any){
     })
     .finally(() => {
       scrapeOperationsDone = true;
+      logger.info('All scrape operations completed.');
     });
     while(!scrapeOperationsDone){
       let pagesScraped = 0
@@ -103,6 +104,7 @@ async function main(options : any){
       for (let i = 0; i < numCloudNodes; i++) {
         await appendFileContent(outFiles[i].getFilePath(),mergedOutFile.getFilePath())
         if(cloudNodeProcesses.length>0){
+          logger.info(`Shutting down CloudNode ${i+1} on port ${ports[i]}...`);
           if(cloudNodeProcesses[i].kill() === false){
             console.log('Error during CloudNode shutdown');
             logger.error(`Error during CloudNode ${i} shutdown`);
