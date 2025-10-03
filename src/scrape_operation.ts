@@ -74,6 +74,17 @@ export class ScrapeOperation {
         }
         return cookieDict
     }
+
+    // Return true when text likely refers to a cloud engineer role.
+    // Matches the full phrase "cloud engineer" or both words "cloud" and "engineer" anywhere.
+    matchesFilterText(text: string): boolean {
+        if (!text) return false;
+        const norm = text.toLowerCase();
+        const phrase = 'cloud engineer';
+        if (norm.includes(phrase)) return true;
+        return norm.includes('cloud') && norm.includes('engineer');
+    }
+    
     /*Scraping Logic*/
     async scrape_job_details(hero : Hero, userAgent : string ,jobId : string, pageArgs : PageArgs) : Promise<any> {
         let cookie : {[key: string]:string} = pageArgs.cookie.cookie
@@ -166,11 +177,24 @@ export class ScrapeOperation {
                 this.logger.error(err)
                 return pageArgs
             } else {
-                const job = {jobId : jobId, jobDetails}
-                jobs.push(job)
+                // Combine title and content and apply filter
+                const title = jobDetails?.job?.title ?? ''
+                const content = jobDetails?.job?.content ?? ''
+                const combined = `${title} ${content}`.trim()
+                if (this.matchesFilterText(combined)) {
+                    const job = {jobId : jobId, jobDetails}
+                    jobs.push(job)
+                } else {
+                    this.logger.debug(`Skipping job ${jobId} - does not match filter`)
+                }
             }
         }
-        await writePageObject(jobs)
+        // Only write page if we found matching jobs
+        if (jobs.length > 0) {
+            await writePageObject(jobs)
+        } else {
+            this.logger.info(`No matching jobs on page ${pageArgs.number}, skipping write`)
+        }
     }
     async startWorker(){
         const hero = new Hero({
