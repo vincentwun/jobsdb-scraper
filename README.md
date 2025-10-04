@@ -1,68 +1,74 @@
-<img src="assets/jobsdb.png" width="300" height="auto"><br>
 # JobsDB Scraper
 
-A few cool highlights about this scraper:
+Original author: [krishgalani](https://github.com/krishgalani/jobsdb-scraper)
 
-- **Lightweight,and made to run on commodity computers** - Low memory/cpu utilization due to efficient use of modern web-scraping framework (https://github.com/ulixee).
-- **Avoids detection along the entire stack** - High guarantees on ability to safely scrape jobs and bypass Cloudflare.
-- **Customize how many pages you want to scrape** - You can specify how many pages of jobs you want to scrape up to a maximum of all.
+A lightweight, production-oriented scraper for JobsDB job listings. It collects job IDs from search pages and fetches job details via JobsDB's backend APIs. The project is designed to be efficient and run on commodity hardware.
 
 ## Installation
 
-### Requirements:
+Requirements:
 
-- **Node.js** version **18** or higher. If not installed, [go here](https://nodejs.org/en/download/) to download it.
-- **git** required. If not installed, [go here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to download it.
-### Steps:
-1. clone the repo
-```shell script
-git clone https://github.com/krishgalani/jobsdb-scraper.git
-```
-2. cd into the repo
-```shell script
+- [Node.js 18+](https://nodejs.org/en/download/)
+
+Quick setup:
+
+1. Clone the repository
+
+```shell
+git clone https://github.com/vincentwun/jobsdb-scraper.git
 cd jobsdb-scraper
 ```
-3. install dependencies
-```shell script
-npm install 
-```
-4. compile typescript
-```shell script
+
+2. Install dependencies and build
+
+```shell
+npm install
 npm run build
 ```
 
-## Usage
-### Warning: This operation is **NOT** thread-safe.
+## How to use
 
-To find the maxPages available to scrape for a region (hk or th):
-```shell script
+Find available pages for a region (hk or th):
+
+```shell
 node build/src/scrape_jobsdb maxPages <region>
 ```
-To run the scraper (can take up to ~10m):
-```shell script
-node build/src/scrape_jobsdb [options]
+
+Run the scraper:
+
+```shell
+node build/src/scrape_jobsdb -r <hk|th> [-n <numPages>] [-s <saveDir>]
+```
+
+Example:
+
+```shell
+node build/src/scrape_jobsdb -r hk -n 10
+```
+
 Options:
-  -r, --region <two_letters>  hk (Hong Kong) or th (Thailand) (required)
-  -n, --numPages <number>     Number of pages to scrape (default: "all")
-  -s, --saveDir <pathToDir>   Directory to store results file  (default: "./jobsdb_scrape_results")
-```
-## Examples
-Find maxPages available to scrape for Hong Kong
-```shell script
-node build/src/scrape_jobsdb maxPages hk
-```
-Scrape all pages in thailand
-```shell script
-node build/src/scrape_jobsdb -r th
-```
-The name format of the result file is jobsdb-\<region>-\<pages>-\<date>.json and saved in a folder called jobsdb_scrape_results by default.
+
+- `-r, --region` (required) two-letter region code: `hk` or `th`
+- `-n, --numPages` number of pages to scrape (default: all)
+- `-s, --saveDir` directory to save results (default: `./jobsdb_scrape_results`)
+
+## Warning
+
+This operation is not thread-safe. Do not run multiple instances against the same save directory concurrently.
 
 ## How it works
 
-The server part of the program is represented by a maximum of two @ulixee/cloud locally hosted server nodes as the engines behind page navigation and fetches, both hosting a browser with many browsing environments. The decision to use two cloud nodes at most was made after testing for the most amount of parralel nodes that can be run before run-time is impacted (tests run on an M1 Macbook Air).
+The scraper uses the [Ulixee](https://nodejs.org/en/download/) stack. A small number of local cloud nodes host browser environments. Workers pop pages from a shared queue, parse job IDs from HTML responses, then fetch job details via backend GraphQL endpoints. Results are streamed and written to a local JSON file.
 
-The client program uses the ulixee framework (github.com/ulixee), where each worker (a @ulixee/hero instance) is connected to a respective @ulixee/cloud server node and has a browser environment. It pops a page to scrape from the shared queue of requested pages,  makes GETS and POST fetches to the jobsdb HTTP/GraphQL web server for the relevant data. For each page, first the jobIds are parsed from the returned HTML response. Then for each jobId a fetch to the backend GraphQL DB is initiated for job details. The results are received in real time and written to a JSON file locally.
+## Planned changes
+
+- [ ] Add filter support for job attributes (location, salary, keywords)
+- [ ] Containerize the application (Docker)
+
+## Credit
+
+Original author: [krishgalani](https://github.com/krishgalani)
 
 ## License
 
-[MIT](LICENSE)
+MIT — see `LICENSE`
