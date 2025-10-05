@@ -24,7 +24,14 @@ cd jobsdb-scraper
 ```shell
 npm install
 npm run build
+```
+
+3. Run Server
+
+```shell
 npm run start:web
+# Or
+node webserver.js
 ```
 
 ## How to use
