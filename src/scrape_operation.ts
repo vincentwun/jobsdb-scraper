@@ -35,6 +35,7 @@ export class JobArgs {
 }
 export class ScrapeOperation {  
     baseUrl : string
+    keywords: string[]
     pageQueue : AsyncBlockingQueue<number>
     cloudNodePort : number
     region : string
@@ -46,8 +47,9 @@ export class ScrapeOperation {
     num_pages : number
     timeoutPromise : any
     timeoutClear : any
-    constructor(baseUrl: string, pageRange: number[], cloudNodePort : number, outFile : any, region : string, logger: Logger, timeout : number = 3600){
+    constructor(baseUrl: string, pageRange: number[], cloudNodePort : number, outFile : any, region : string, logger: Logger, timeout : number = 3600, keywords: string = ''){
         this.baseUrl = baseUrl
+        this.keywords = keywords ? keywords.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean) : []
         this.pagesScraped = 0
         this.outFile = outFile
         this.region = region
@@ -80,6 +82,14 @@ export class ScrapeOperation {
     matchesFilterText(text: string): boolean {
         if (!text) return false;
         const norm = text.toLowerCase();
+        // If explicit keywords provided, require any keyword to appear in text
+        if (this.keywords && this.keywords.length > 0) {
+            for (const kw of this.keywords) {
+                if (norm.includes(kw)) return true;
+            }
+            return false;
+        }
+        // Fallback: original heuristic for cloud engineer
         const phrase = 'cloud engineer';
         if (norm.includes(phrase)) return true;
         return norm.includes('cloud') && norm.includes('engineer');

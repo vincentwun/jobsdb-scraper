@@ -46,6 +46,29 @@ Example:
 node build/src/scrape_jobsdb -r hk -n 10
 ```
 
+Run the local web UI
+--------------------
+
+After building the project (see Installation), you can run a small local web UI that lets you choose region, pages and keywords from a browser:
+
+1. Build the project:
+
+```shell
+npm run build
+```
+
+2. Start the webserver:
+
+```shell
+npm run start:web
+```
+
+3. Open http://localhost:3000 in your browser, fill the form and submit. When the scrape completes the page will provide a link to view the generated JSON file.
+
+Notes:
+- The webserver runs `node build/src/scrape_jobsdb` under the hood and writes results to `jobsdb_scrape_results/`.
+- If you want live reloading during development, install `nodemon` globally and use `npm run dev:web`.
+
 Options:
 
 - `-r, --region` (required) two-letter region code: `hk` or `th`

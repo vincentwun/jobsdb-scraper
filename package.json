@@ -35,6 +35,8 @@
   "scripts": {
     "test": "tsc && jest --detectOpenHandles",
     "build": "tsc",
-    "clear": "rimraf build jobsdb_scrape_logs jobsdb_scrape_results"
+    "clear": "rimraf build jobsdb_scrape_logs jobsdb_scrape_results",
+    "start:web": "node webserver.js",
+    "dev:web": "nodemon --watch public --watch webserver.js webserver.js"
   }
 }

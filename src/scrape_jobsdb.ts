@@ -64,7 +64,7 @@ async function main(options : any){
     }
     //Start scraping
     for (let i = 0; i < numCloudNodes; i++) {
-      scrapeOperations.push(new ScrapeOperation(baseUrl,pageRanges[i],ports[i],outFiles[i],region,logger.child({module: `scrapeOp${i+1}`})))
+      scrapeOperations.push(new ScrapeOperation(baseUrl,pageRanges[i],ports[i],outFiles[i],region,logger.child({module: `scrapeOp${i+1}`}), undefined, options.keywords))
       tasks.push(scrapeOperations[i].__call__())
       logger.info(`Scrape operation ${i+1} initialized for pages ${pageRanges[i][0]}-${pageRanges[i][1]}`);
     }
@@ -141,6 +141,7 @@ program
   .option('-n, --numPages <number>', 'Number of pages to scrape',(option) => {return option},'all')
   // .requiredOption('-f, --format <file_format>', 'csv or json', parseFormat)
   .option('-s, --saveDir <pathToDir>', 'Directory to store results file (optional)', parseSaveDir, './jobsdb_scrape_results')
+  .option('-k, --keywords <keywords>', 'Comma-separated keywords to filter jobs', (v) => v, '')
   .action(async (cmdObj) => {
     try {
       const [numPages, maxPages] = await parseNumPages(cmdObj.numPages, cmdObj.region);
