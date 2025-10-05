@@ -4,6 +4,7 @@
     "@ulixee/hero": "^2.0.0-alpha.30",
     "async-mutex": "^0.5.0",
     "commander": "^12.1.0",
+    "express": "^5.1.0",
     "he": "^1.2.0",
     "html-to-text": "^9.0.5",
     "semaphore-async-await": "^1.5.1",
